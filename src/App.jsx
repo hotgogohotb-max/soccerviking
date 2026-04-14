@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, X, ChevronUp, ChevronDown, Users, UserCheck, UserMinus, RotateCcw, Send } from 'lucide-react';
 
 // 보내주신 구글 앱스 스크립트 URL 적용 완료
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwBxUCJ9AHw-uvbfx4ui9QrLKgqOUkecEeVA29iIC6z3Fa6YbRKGwOpV2DtpQArakw/exec"; 
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw7uV7bDAN9Dc_ATzz3I-aDFgNYkr2sNdryrrcnoLogDHkbWx8zHn3itE0rWSxwNdKx/exec"; 
 
 const formationData = {
   '4-4-2': [
