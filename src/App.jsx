@@ -90,6 +90,11 @@ const App = () => {
     setPlayers(players.map(p => p.id === id ? { ...p, [type]: Math.max(0, p[type] + delta) } : p));
   };
 
+  const resetPositions = () => {
+    if (!confirm("모든 쿼터 포지션을 초기화할까요?")) return;
+    setQuarterSlots([0, 1, 2, 3].map(() => formationData[currentFormation].map(s => ({ ...s, playerId: null }))));
+  };
+
   const attendingPlayers = players.filter(p => p.isPresent);
 
   return (
@@ -102,6 +107,7 @@ const App = () => {
           ))}
         </div>
         <div className="flex gap-1">
+          <button onClick={resetPositions} className="px-3 py-1.5 bg-rose-500 text-white rounded-lg flex items-center gap-1 active:scale-95"><RotateCcw size={12}/> <span className="text-[10px] font-bold">초기화</span></button>
           <button onClick={sendDataToSheet} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg flex items-center gap-1 active:scale-95"><Send size={12}/> <span className="text-[10px] font-bold">전송</span></button>
           <button onClick={() => setShowManager(true)} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg flex items-center gap-1 active:scale-95"><Users size={12}/> <span className="text-[10px] font-bold">명단</span></button>
         </div>
