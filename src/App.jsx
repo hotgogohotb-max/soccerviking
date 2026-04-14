@@ -91,8 +91,10 @@ const App = () => {
   };
 
   const resetPositions = () => {
-    if (!confirm("모든 쿼터 포지션을 초기화할까요?")) return;
-    setQuarterSlots([0, 1, 2, 3].map(() => formationData[currentFormation].map(s => ({ ...s, playerId: null }))));
+    if (!confirm(`${selectedQuarter + 1}쿼터 포지션을 초기화할까요?`)) return;
+    const newQuarterSlots = [...quarterSlots];
+    newQuarterSlots[selectedQuarter] = formationData[currentFormation].map(s => ({ ...s, playerId: null }));
+    setQuarterSlots(newQuarterSlots);
   };
 
   const attendingPlayers = players.filter(p => p.isPresent);
