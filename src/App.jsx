@@ -135,35 +135,35 @@ const App = () => {
 
       <div className={`bg-white transition-all flex flex-col overflow-hidden ${isRosterOpen ? 'flex-1' : 'h-0'}`}>
         <div className="flex-1 overflow-y-auto p-2">
-          <div className="grid grid-cols-1 gap-1">
+          <div className="grid grid-cols-4 gap-1">
             {attendingPlayers.map(player => {
               const playerQuarters = getPlayerQuarters(player.id);
               return (
-                <div key={player.id} className="px-2 py-1 bg-slate-50 rounded-lg border shadow-sm flex items-center gap-1.5">
-                  <div className="flex gap-1">
+                <div key={player.id} className="px-1.5 py-1.5 bg-slate-50 rounded-lg border shadow-sm flex flex-col items-center gap-1">
+                  <span className="font-black text-xs text-slate-800">{player.name}</span>
+                  <div className="flex gap-0.5">
                     {playerQuarters.map((active, idx) => (
                       <div key={idx} className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black ${active ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
                         {idx + 1}
                       </div>
                     ))}
                   </div>
-                  <span className="font-black text-xs text-slate-800 flex-1 truncate">{player.name}</span>
-                  <div className="flex gap-1">
-                    <div className="flex items-center bg-white border rounded h-6 px-1">
-                      <button onClick={() => updateStat(player.id, 'goals', -1)} className="w-4 h-full text-slate-300 text-xs font-bold leading-none">-</button>
-                      <div className="flex items-baseline gap-0.5 px-0.5">
+                  <div className="flex gap-1 w-full">
+                    <div className="flex-1 flex items-center justify-between bg-white border rounded h-6 px-1">
+                      <button onClick={() => updateStat(player.id, 'goals', -1)} className="text-slate-300 text-xs font-bold leading-none">-</button>
+                      <div className="flex items-baseline gap-0.5">
                         <span className="text-[9px] font-black text-slate-400">G</span>
                         <span className="font-black text-emerald-600 text-xs">{player.goals}</span>
                       </div>
-                      <button onClick={() => updateStat(player.id, 'goals', 1)} className="w-4 h-full text-emerald-600 text-xs font-bold leading-none">+</button>
+                      <button onClick={() => updateStat(player.id, 'goals', 1)} className="text-emerald-600 text-xs font-bold leading-none">+</button>
                     </div>
-                    <div className="flex items-center bg-white border rounded h-6 px-1">
-                      <button onClick={() => updateStat(player.id, 'assists', -1)} className="w-4 h-full text-slate-300 text-xs font-bold leading-none">-</button>
-                      <div className="flex items-baseline gap-0.5 px-0.5">
+                    <div className="flex-1 flex items-center justify-between bg-white border rounded h-6 px-1">
+                      <button onClick={() => updateStat(player.id, 'assists', -1)} className="text-slate-300 text-xs font-bold leading-none">-</button>
+                      <div className="flex items-baseline gap-0.5">
                         <span className="text-[9px] font-black text-slate-400">A</span>
                         <span className="font-black text-blue-600 text-xs">{player.assists}</span>
                       </div>
-                      <button onClick={() => updateStat(player.id, 'assists', 1)} className="w-4 h-full text-blue-600 text-xs font-bold leading-none">+</button>
+                      <button onClick={() => updateStat(player.id, 'assists', 1)} className="text-blue-600 text-xs font-bold leading-none">+</button>
                     </div>
                   </div>
                 </div>
