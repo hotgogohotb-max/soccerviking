@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, X, ChevronUp, ChevronDown, Users, UserCheck, UserMinus, RotateCcw, Send } from 'lucide-react';
 
-// 보내주신 구글 앱스 스크립트 URL 적용 완료
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw7uV7bDAN9Dc_ATzz3I-aDFgNYkr2sNdryrrcnoLogDHkbWx8zHn3itE0rWSxwNdKx/exec"; 
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw7uV7bDAN9Dc_ATzz3I-aDFgNYkr2sNdryrrcnoLogDHkbWx8zHn3itE0rWSxwNdKx/exec";
 
 const formationData = {
   '4-4-2': [
@@ -24,32 +23,67 @@ const formationData = {
 
 const rawNames = ["김광태", "김돈하", "김동현", "김민성", "김상오", "김태진", "김필우", "김한주", "박성수", "박승빈", "박정근", "박종엽", "박종호", "송상규", "심영민", "심현승", "안광빈", "유재민", "유재영", "이대행", "이동민", "이승주", "이정수", "이정혁", "이현우", "이형진", "정인탁", "최건혁", "최진석", "허성찬", "홍석운", "최원석", "홍석재"];
 
-const App = () => {
-  const [players, setPlayers] = useState(() => {
-    const saved = localStorage.getItem('viking-26-players');
-    return saved ? JSON.parse(saved) : rawNames.map((name, i) => ({ id: i+1, name, isPresent: false, goals: 0, assists: 0 }));
-  });
+const emptyPlayers = () => rawNames.map((name, i) => ({ id: i + 1, name, isPresent: false, goals: 0, assists: 0 }));
+const emptySlots = (formation) => [0, 1, 2, 3].map(() => formationData[formation].map(s => ({ ...s, playerId: null })));
 
+const App = () => {
+  const [players, setPlayers] = useState(emptyPlayers);
   const [currentFormation, setCurrentFormation] = useState('4-4-2');
   const [selectedQuarter, setSelectedQuarter] = useState(0);
   const [isRosterOpen, setIsRosterOpen] = useState(true);
   const [showManager, setShowManager] = useState(false);
   const [activeSlot, setActiveSlot] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [quarterSlots, setQuarterSlots] = useState(() => emptySlots('4-4-2'));
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [quarterSlots, setQuarterSlots] = useState(() => {
-    const saved = localStorage.getItem('viking-quarter-slots');
-    if (saved) return JSON.parse(saved);
-    return [0, 1, 2, 3].map(() => formationData['4-4-2'].map(s => ({ ...s, playerId: null })));
-  });
+  // 날짜 변경 시 시트에서 데이터 조회
+  useEffect(() => {
+    loadDataFromSheet(selectedDate);
+  }, [selectedDate]);
 
-  useEffect(() => { localStorage.setItem('viking-26-players', JSON.stringify(players)); }, [players]);
-  useEffect(() => { localStorage.setItem('viking-quarter-slots', JSON.stringify(quarterSlots)); }, [quarterSlots]);
+  const loadDataFromSheet = async (date) => {
+    const formattedDate = date.substring(5);
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({ action: 'load', date: formattedDate });
+      const res = await fetch(`${GAS_WEB_APP_URL}?${params}`);
+      const data = await res.json();
 
-  const currentSlots = quarterSlots[selectedQuarter];
+      if (data.result === 'empty' || !data.players?.length) {
+        // 데이터 없으면 초기화
+        setPlayers(emptyPlayers());
+        setQuarterSlots(emptySlots(currentFormation));
+        return;
+      }
 
-  const getPlayerQuarters = (playerId) => {
-    return quarterSlots.map(slots => slots.some(s => s.playerId === playerId));
+      // 선수 데이터 반영 (출석/골/어시)
+      const newPlayers = emptyPlayers().map(p => {
+        const loaded = data.players.find(lp => lp.name === p.name);
+        if (loaded) return { ...p, isPresent: true, goals: loaded.goals || 0, assists: loaded.assists || 0 };
+        return p;
+      });
+      setPlayers(newPlayers);
+
+      // 쿼터 포지션 반영
+      if (data.quarters) {
+        const newSlots = data.quarters.map(slotMap =>
+          formationData[currentFormation].map(s => ({
+            ...s,
+            playerId: slotMap[s.id]
+              ? (newPlayers.find(p => p.name === slotMap[s.id])?.id ?? null)
+              : null
+          }))
+        );
+        setQuarterSlots(newSlots);
+      } else {
+        setQuarterSlots(emptySlots(currentFormation));
+      }
+    } catch (e) {
+      console.error('데이터 로드 실패:', e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const sendDataToSheet = async () => {
@@ -61,18 +95,30 @@ const App = () => {
       return;
     }
 
-    const statsToSend = attendingPlayers.flatMap(p => [
-      { name: p.name, date: formattedDate, type: "attendance", value: 1 },
-      ...(p.goals > 0 ? [{ name: p.name, date: formattedDate, type: "goal", value: p.goals }] : []),
-      ...(p.assists > 0 ? [{ name: p.name, date: formattedDate, type: "assist", value: p.assists }] : []),
+    // 출석/골/어시 통계
+    const stats = attendingPlayers.flatMap(p => [
+      { name: p.name, type: "attendance", value: 1 },
+      ...(p.goals > 0   ? [{ name: p.name, type: "goal",   value: p.goals   }] : []),
+      ...(p.assists > 0 ? [{ name: p.name, type: "assist", value: p.assists }] : []),
     ]);
 
-    console.log("전송 데이터:", statsToSend);
+    // 쿼터별 포지션 (slotId → 선수 이름)
+    const quarters = quarterSlots.map(slots => {
+      const slotMap = {};
+      slots.forEach(s => {
+        if (s.playerId) {
+          const player = players.find(p => p.id === s.playerId);
+          if (player) slotMap[s.id] = player.name;
+        }
+      });
+      return slotMap;
+    });
 
     try {
-      const params = new URLSearchParams({ data: JSON.stringify(statsToSend) });
-      await fetch(`${GAS_WEB_APP_URL}?${params.toString()}`, { mode: 'no-cors' });
-      alert(`${formattedDate} 기록 전송 완료! (${statsToSend.length}건)`);
+      const payload = { date: formattedDate, stats, quarters };
+      const params = new URLSearchParams({ action: 'save', data: JSON.stringify(payload) });
+      await fetch(`${GAS_WEB_APP_URL}?${params}`, { mode: 'no-cors' });
+      alert(`${formattedDate} 전송 완료!`);
     } catch (e) {
       console.error("전송 에러:", e);
       alert("전송 오류: " + (e.message || String(e)));
@@ -97,6 +143,7 @@ const App = () => {
     setQuarterSlots(newQuarterSlots);
   };
 
+  const currentSlots = quarterSlots[selectedQuarter];
   const attendingPlayers = players.filter(p => p.isPresent);
 
   return (
@@ -109,13 +156,20 @@ const App = () => {
           ))}
         </div>
         <div className="flex gap-1">
-          <button onClick={resetPositions} className="px-3 py-1.5 bg-rose-500 text-white rounded-lg flex items-center gap-1 active:scale-95"><RotateCcw size={12}/> <span className="text-[10px] font-bold">초기화</span></button>
-          <button onClick={sendDataToSheet} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg flex items-center gap-1 active:scale-95"><Send size={12}/> <span className="text-[10px] font-bold">전송</span></button>
-          <button onClick={() => setShowManager(true)} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg flex items-center gap-1 active:scale-95"><Users size={12}/> <span className="text-[10px] font-bold">명단</span></button>
+          <button onClick={resetPositions} disabled={isLoading} className="px-3 py-1.5 bg-rose-500 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40"><RotateCcw size={12}/> <span className="text-[10px] font-bold">초기화</span></button>
+          <button onClick={sendDataToSheet} disabled={isLoading} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40"><Send size={12}/> <span className="text-[10px] font-bold">전송</span></button>
+          <button onClick={() => setShowManager(true)} disabled={isLoading} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40"><Users size={12}/> <span className="text-[10px] font-bold">명단</span></button>
         </div>
       </header>
 
-      {/* 전술판 - 원 크기 확대(w-16 h-16) 유지 */}
+      {/* 로딩 인디케이터 */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-black/20 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl px-6 py-4 shadow-xl font-black text-slate-700 text-sm">⏳ 데이터 불러오는 중...</div>
+        </div>
+      )}
+
+      {/* 전술판 */}
       <div className={`relative w-full transition-all bg-emerald-500 overflow-hidden ${isRosterOpen ? 'h-[35vh]' : 'flex-1'}`}>
         {currentSlots.map(slot => {
           const p = players.find(p => p.id === slot.playerId);
@@ -145,7 +199,7 @@ const App = () => {
         <div className="flex-1 overflow-y-auto p-2">
           <div className="grid grid-cols-4 gap-1">
             {attendingPlayers.map(player => {
-              const playerQuarters = getPlayerQuarters(player.id);
+              const playerQuarters = quarterSlots.map(slots => slots.some(s => s.playerId === player.id));
               return (
                 <div key={player.id} className="px-1.5 py-1.5 bg-slate-50 rounded-lg border shadow-sm flex flex-col items-center gap-1">
                   <span className="font-black text-xs text-slate-800">{player.name}</span>
@@ -181,7 +235,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* 명단 관리 & 배정 모달 (이전과 동일) */}
+      {/* 명단 관리 모달 */}
       {showManager && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end">
           <div className="bg-white w-full max-h-[80vh] rounded-t-[2rem] p-6">
@@ -198,7 +252,7 @@ const App = () => {
         </div>
       )}
 
-      {/* 배정 팝업 - 이미 배정된 선수는 필터링하여 보여줌 */}
+      {/* 선수 배정 팝업 */}
       {activeSlot && (
         <div className="fixed inset-0 bg-white/98 z-[60] p-6 flex flex-col">
           <div className="flex justify-between mb-4 border-b pb-2 font-black">
@@ -206,13 +260,9 @@ const App = () => {
           </div>
           <div className="grid grid-cols-4 gap-2 overflow-y-auto">
             {attendingPlayers
-              .filter(p => !currentSlots.some(slot => slot.playerId === p.id)) // [수정] 현재 쿼터에 이미 있는 사람 제외
+              .filter(p => !currentSlots.some(slot => slot.playerId === p.id))
               .map(p => (
-                <button 
-                  key={p.id} 
-                  onClick={() => assignPlayer(p.id)} 
-                  className="p-3 bg-slate-100 rounded-lg text-xs font-bold active:bg-emerald-100"
-                >
+                <button key={p.id} onClick={() => assignPlayer(p.id)} className="p-3 bg-slate-100 rounded-lg text-xs font-bold active:bg-emerald-100">
                   {p.name}
                 </button>
               ))}
