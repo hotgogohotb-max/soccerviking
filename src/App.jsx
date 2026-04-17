@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ChevronUp, ChevronDown, Users, RotateCcw, Send } from 'lucide-react';
 
 const GAS_WEB_APP_URL2 = "https://script.google.com/macros/s/AKfycbw7uV7bDAN9Dc_ATzz3I-aDFgNYkr2sNdryrrcnoLogDHkbWx8zHn3itE0rWSxwNdKx/exec";
-const GAS_WEB_APP_URL  = "https://script.google.com/macros/s/AKfycbwvJbmAALq3zmt3rS2VReRpEHqn4CgqyMCuy-M0Civ7KOVdamnC3LDaa897LBEDr5sX/exec";
+const GAS_WEB_APP_URL  = "https://script.google.com/macros/s/AKfycbz_yQuDbRdJY-WItRJDdjnaNHbxhPpnUlyg8cFHMz9juH3Czw7KcdgYxGh-m-EUmAbD/exec";
 
 const formationData = {
   '4-4-2': [
