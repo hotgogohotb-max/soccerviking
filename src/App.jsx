@@ -1,111 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, ChevronUp, ChevronDown, Users, UserCheck, UserMinus, RotateCcw, Send } from 'lucide-react';
+import { X, ChevronUp, ChevronDown, Users, RotateCcw, Send } from 'lucide-react';
 
 const GAS_WEB_APP_URL2 = "https://script.google.com/macros/s/AKfycbw7uV7bDAN9Dc_ATzz3I-aDFgNYkr2sNdryrrcnoLogDHkbWx8zHn3itE0rWSxwNdKx/exec";
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHDSiLGcX8lzoPaobu3BUXtGmSwbcJNShU250QbNovSHqSKKUGN5e_Vn-_RGPJ948v/exec";
-
+const GAS_WEB_APP_URL  = "https://script.google.com/macros/s/AKfycbwvJbmAALq3zmt3rS2VReRpEHqn4CgqyMCuy-M0Civ7KOVdamnC3LDaa897LBEDr5sX/exec";
 
 const formationData = {
   '4-4-2': [
     { id: 'ST1', label: 'ST', top: '15%', left: '35%' }, { id: 'ST2', label: 'ST', top: '15%', left: '65%' },
-    { id: 'LM', label: 'LM', top: '40%', left: '15%' }, { id: 'CM1', label: 'CM', top: '40%', left: '40%' },
-    { id: 'CM2', label: 'CM', top: '40%', left: '60%' }, { id: 'RM', label: 'RM', top: '40%', left: '85%' },
-    { id: 'LB', label: 'LB', top: '65%', left: '15%' }, { id: 'CB1', label: 'CB', top: '65%', left: '40%' },
-    { id: 'CB2', label: 'CB', top: '65%', left: '60%' }, { id: 'RB', label: 'RB', top: '65%', left: '85%' },
-    { id: 'GK', label: 'GK', top: '85%', left: '50%' }
+    { id: 'LM',  label: 'LM', top: '40%', left: '15%' }, { id: 'CM1', label: 'CM', top: '40%', left: '40%' },
+    { id: 'CM2', label: 'CM', top: '40%', left: '60%' }, { id: 'RM',  label: 'RM', top: '40%', left: '85%' },
+    { id: 'LB',  label: 'LB', top: '65%', left: '15%' }, { id: 'CB1', label: 'CB', top: '65%', left: '40%' },
+    { id: 'CB2', label: 'CB', top: '65%', left: '60%' }, { id: 'RB',  label: 'RB', top: '65%', left: '85%' },
+    { id: 'GK',  label: 'GK', top: '85%', left: '50%' },
   ],
   '4-3-3': [
-    { id: 'LW', label: 'LW', top: '15%', left: '20%' }, { id: 'ST', label: 'ST', top: '12%', left: '50%' }, { id: 'RW', label: 'RW', top: '15%', left: '80%' },
-    { id: 'CM1', label: 'CM', top: '42%', left: '25%' }, { id: 'CDM', label: 'CDM', top: '48%', left: '50%' }, { id: 'CM2', label: 'CM', top: '42%', left: '75%' },
-    { id: 'LB', label: 'LB', top: '70%', left: '15%' }, { id: 'CB1', label: 'CB', top: '70%', left: '40%' },
-    { id: 'CB2', label: 'CB', top: '70%', left: '60%' }, { id: 'RB', label: 'RB', top: '85%', left: '85%' },
-    { id: 'GK', label: 'GK', top: '88%', left: '50%' }
-  ]
+    { id: 'LW',  label: 'LW',  top: '15%', left: '20%' }, { id: 'ST',  label: 'ST',  top: '12%', left: '50%' }, { id: 'RW',  label: 'RW',  top: '15%', left: '80%' },
+    { id: 'CM1', label: 'CM',  top: '42%', left: '25%' }, { id: 'CDM', label: 'CDM', top: '48%', left: '50%' }, { id: 'CM2', label: 'CM',  top: '42%', left: '75%' },
+    { id: 'LB',  label: 'LB',  top: '70%', left: '15%' }, { id: 'CB1', label: 'CB',  top: '70%', left: '40%' },
+    { id: 'CB2', label: 'CB',  top: '70%', left: '60%' }, { id: 'RB',  label: 'RB',  top: '85%', left: '85%' },
+    { id: 'GK',  label: 'GK',  top: '88%', left: '50%' },
+  ],
 };
 
-const rawNames = ["김광태", "김돈하", "김동현", "김민성", "김상오", "김태진", "김필우", "김한주", "박성수", "박승빈", "박정근", "박종엽", "박종호", "송상규", "심영민", "심현승", "안광빈", "유재민", "유재영", "이대행", "이동민", "이승주", "이정수", "이정혁", "이현우", "이형진", "정인탁", "최건혁", "최진석", "허성찬", "홍석운", "최원석", "홍석재"];
+const FORMATIONS = ['4-4-2', '4-3-3'];
+const rawNames = ["김광태","김돈하","김동현","김민성","김상오","김태진","김필우","김한주","박성수","박승빈","박정근","박종엽","박종호","송상규","심영민","심현승","안광빈","유재민","유재영","이대행","이동민","이승주","이정수","이정혁","이현우","이형진","정인탁","최건혁","최진석","허성찬","홍석운","최원석","홍석재"];
 
 const emptyPlayers = () => rawNames.map((name, i) => ({ id: i + 1, name, isPresent: false, goals: 0, assists: 0 }));
-const emptySlots = (formation) => [0, 1, 2, 3].map(() => formationData[formation].map(s => ({ ...s, playerId: null })));
+const emptyQuarterSlots = (formation) => formationData[formation].map(s => ({ ...s, playerId: null }));
 
 const App = () => {
-  const [players, setPlayers] = useState(emptyPlayers);
-  const [currentFormation, setCurrentFormation] = useState('4-4-2');
+  const [players, setPlayers]               = useState(emptyPlayers);
+  // 쿼터별 포메이션 (각각 독립)
+  const [quarterFormations, setQuarterFormations] = useState(['4-4-2', '4-4-2', '4-4-2', '4-4-2']);
+  // 쿼터별 슬롯 배정
+  const [quarterSlots, setQuarterSlots]     = useState(() => [0,1,2,3].map(() => emptyQuarterSlots('4-4-2')));
   const [selectedQuarter, setSelectedQuarter] = useState(0);
-  const [isRosterOpen, setIsRosterOpen] = useState(true);
-  const [showManager, setShowManager] = useState(false);
-  const [activeSlot, setActiveSlot] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [quarterSlots, setQuarterSlots] = useState(() => emptySlots('4-4-2'));
-  const [isLoading, setIsLoading] = useState(false);
+  const [isRosterOpen, setIsRosterOpen]     = useState(true);
+  const [showManager, setShowManager]       = useState(false);
+  const [activeSlot, setActiveSlot]         = useState(null);
+  const [selectedDate, setSelectedDate]     = useState(new Date().toISOString().split('T')[0]);
+  const [isLoading, setIsLoading]           = useState(false);
 
-  // 날짜 변경 시 시트에서 데이터 조회
   useEffect(() => {
     loadDataFromSheet(selectedDate);
   }, [selectedDate]);
 
+  // 현재 쿼터의 포메이션 / 슬롯
+  const currentFormation = quarterFormations[selectedQuarter];
+  const currentSlots     = quarterSlots[selectedQuarter];
+
+  // ── 포메이션 변경 (현재 쿼터만) ──────────────────────────────
+  const changeFormation = (formation) => {
+    if (formation === currentFormation) return;
+    if (!confirm(`${selectedQuarter + 1}쿼터 포메이션을 ${formation}으로 변경하면 배정이 초기화됩니다. 계속할까요?`)) return;
+    const newFormations = [...quarterFormations];
+    newFormations[selectedQuarter] = formation;
+    setQuarterFormations(newFormations);
+
+    const newSlots = [...quarterSlots];
+    newSlots[selectedQuarter] = emptyQuarterSlots(formation);
+    setQuarterSlots(newSlots);
+  };
+
+  // ── 데이터 로드 ───────────────────────────────────────────────
   const loadDataFromSheet = async (date) => {
-    const formattedDate = date.substring(5);
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({ action: 'load', date: formattedDate });
-      const res = await fetch(`${GAS_WEB_APP_URL}?${params}`);
+      const params = new URLSearchParams({ action: 'load', date: date.substring(5) });
+      const res  = await fetch(`${GAS_WEB_APP_URL}?${params}`);
       const data = await res.json();
 
       if (data.result === 'empty' || !data.players?.length) {
-        // 데이터 없으면 초기화
         setPlayers(emptyPlayers());
-        setQuarterSlots(emptySlots(currentFormation));
+        setQuarterFormations(['4-4-2', '4-4-2', '4-4-2', '4-4-2']);
+        setQuarterSlots([0,1,2,3].map(() => emptyQuarterSlots('4-4-2')));
         return;
       }
 
-      // 선수 데이터 반영 (출석/골/어시)
+      // 선수 출석/골/어시 반영
       const newPlayers = emptyPlayers().map(p => {
         const loaded = data.players.find(lp => lp.name === p.name);
-        if (loaded) return { ...p, isPresent: true, goals: loaded.goals || 0, assists: loaded.assists || 0 };
-        return p;
+        return loaded ? { ...p, isPresent: true, goals: loaded.goals || 0, assists: loaded.assists || 0 } : p;
       });
       setPlayers(newPlayers);
 
-      // 쿼터 포지션 반영
-      if (data.quarters) {
-        const newSlots = data.quarters.map(slotMap =>
-          formationData[currentFormation].map(s => ({
+      // 쿼터별 포메이션 + 슬롯 반영
+      if (data.quarters?.length === 4) {
+        const newFormations = data.quarters.map(q => q.formation || '4-4-2');
+        setQuarterFormations(newFormations);
+
+        const newSlots = data.quarters.map(q => {
+          const formation = q.formation || '4-4-2';
+          const slotMap   = q.slots || {};
+          return formationData[formation].map(s => ({
             ...s,
             playerId: slotMap[s.id]
               ? (newPlayers.find(p => p.name === slotMap[s.id])?.id ?? null)
-              : null
-          }))
-        );
+              : null,
+          }));
+        });
         setQuarterSlots(newSlots);
       } else {
-        setQuarterSlots(emptySlots(currentFormation));
+        setQuarterFormations(['4-4-2', '4-4-2', '4-4-2', '4-4-2']);
+        setQuarterSlots([0,1,2,3].map(() => emptyQuarterSlots('4-4-2')));
       }
     } catch (e) {
-      console.error('데이터 로드 실패:', e);
+      console.error('로드 실패:', e);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ── 데이터 전송 ───────────────────────────────────────────────
   const sendDataToSheet = async () => {
-    const formattedDate = selectedDate.substring(5);
+    const formattedDate    = selectedDate.substring(5);
     const attendingPlayers = players.filter(p => p.isPresent);
+    if (!attendingPlayers.length) { alert("출석 체크된 선수가 없습니다."); return; }
 
-    if (attendingPlayers.length === 0) {
-      alert("출석 체크된 선수가 없습니다.");
-      return;
-    }
-
-    // 출석/골/어시 통계
     const stats = attendingPlayers.flatMap(p => [
-      { name: p.name, type: "attendance", value: 1 },
-      ...(p.goals > 0   ? [{ name: p.name, type: "goal",   value: p.goals   }] : []),
-      ...(p.assists > 0 ? [{ name: p.name, type: "assist", value: p.assists }] : []),
+      { name: p.name, type: 'attendance', value: 1 },
+      ...(p.goals   > 0 ? [{ name: p.name, type: 'goal',   value: p.goals   }] : []),
+      ...(p.assists > 0 ? [{ name: p.name, type: 'assist', value: p.assists }] : []),
     ]);
 
-    // 쿼터별 포지션 (slotId → 선수 이름)
-    const quarters = quarterSlots.map(slots => {
+    // 쿼터별 포메이션 + 슬롯 패킹
+    const quarters = quarterSlots.map((slots, idx) => {
       const slotMap = {};
       slots.forEach(s => {
         if (s.playerId) {
@@ -113,58 +132,64 @@ const App = () => {
           if (player) slotMap[s.id] = player.name;
         }
       });
-      return slotMap;
+      return { formation: quarterFormations[idx], slots: slotMap };
     });
 
     try {
       const payload = { date: formattedDate, stats, quarters };
-      const params = new URLSearchParams({ action: 'save', data: JSON.stringify(payload) });
+      const params  = new URLSearchParams({ action: 'save', data: JSON.stringify(payload) });
       await fetch(`${GAS_WEB_APP_URL}?${params}`, { mode: 'no-cors' });
       alert(`${formattedDate} 전송 완료!`);
     } catch (e) {
-      console.error("전송 에러:", e);
-      alert("전송 오류: " + (e.message || String(e)));
+      alert('전송 오류: ' + (e.message || String(e)));
     }
   };
 
   const assignPlayer = (playerId) => {
-    const newQuarterSlots = [...quarterSlots];
-    newQuarterSlots[selectedQuarter] = currentSlots.map(s => s.id === activeSlot ? { ...s, playerId } : s);
-    setQuarterSlots(newQuarterSlots);
+    const newSlots = [...quarterSlots];
+    newSlots[selectedQuarter] = currentSlots.map(s => s.id === activeSlot ? { ...s, playerId } : s);
+    setQuarterSlots(newSlots);
     setActiveSlot(null);
   };
 
-  const updateStat = (id, type, delta) => {
+  const updateStat = (id, type, delta) =>
     setPlayers(players.map(p => p.id === id ? { ...p, [type]: Math.max(0, p[type] + delta) } : p));
-  };
 
   const resetPositions = () => {
     if (!confirm(`${selectedQuarter + 1}쿼터 포지션을 초기화할까요?`)) return;
-    const newQuarterSlots = [...quarterSlots];
-    newQuarterSlots[selectedQuarter] = formationData[currentFormation].map(s => ({ ...s, playerId: null }));
-    setQuarterSlots(newQuarterSlots);
+    const newSlots = [...quarterSlots];
+    newSlots[selectedQuarter] = emptyQuarterSlots(currentFormation);
+    setQuarterSlots(newSlots);
   };
 
-  const currentSlots = quarterSlots[selectedQuarter];
   const attendingPlayers = players.filter(p => p.isPresent);
 
   return (
     <div className="flex flex-col h-screen bg-slate-100 font-sans select-none overflow-hidden">
       <header className="px-4 py-2 bg-white flex justify-between items-center z-10 border-b shadow-sm gap-2">
         <div className="flex gap-1 items-center">
-          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="text-[10px] border rounded px-1 h-7" />
-          {['4-4-2', '4-3-3'].map(f => (
-            <button key={f} onClick={() => setCurrentFormation(f)} className={`px-2 py-1 rounded text-[10px] font-black ${currentFormation === f ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-400 border'}`}>{f}</button>
+          <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="text-[10px] border rounded px-1 h-7" />
+          {/* 포메이션 버튼: 현재 쿼터의 포메이션을 제어 */}
+          {FORMATIONS.map(f => (
+            <button key={f} onClick={() => changeFormation(f)}
+              className={`px-2 py-1 rounded text-[10px] font-black ${currentFormation === f ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-400 border'}`}>
+              {f}
+            </button>
           ))}
         </div>
         <div className="flex gap-1">
-          <button onClick={resetPositions} disabled={isLoading} className="px-3 py-1.5 bg-rose-500 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40"><RotateCcw size={12}/> <span className="text-[10px] font-bold">초기화</span></button>
-          <button onClick={sendDataToSheet} disabled={isLoading} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40"><Send size={12}/> <span className="text-[10px] font-bold">전송</span></button>
-          <button onClick={() => setShowManager(true)} disabled={isLoading} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40"><Users size={12}/> <span className="text-[10px] font-bold">명단</span></button>
+          <button onClick={resetPositions} disabled={isLoading} className="px-3 py-1.5 bg-rose-500 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40">
+            <RotateCcw size={12}/> <span className="text-[10px] font-bold">초기화</span>
+          </button>
+          <button onClick={sendDataToSheet} disabled={isLoading} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40">
+            <Send size={12}/> <span className="text-[10px] font-bold">전송</span>
+          </button>
+          <button onClick={() => setShowManager(true)} disabled={isLoading} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40">
+            <Users size={12}/> <span className="text-[10px] font-bold">명단</span>
+          </button>
         </div>
       </header>
 
-      {/* 로딩 인디케이터 */}
       {isLoading && (
         <div className="absolute inset-0 bg-black/20 z-50 flex items-center justify-center">
           <div className="bg-white rounded-2xl px-6 py-4 shadow-xl font-black text-slate-700 text-sm">⏳ 데이터 불러오는 중...</div>
@@ -173,10 +198,15 @@ const App = () => {
 
       {/* 전술판 */}
       <div className={`relative w-full transition-all bg-emerald-500 overflow-hidden ${isRosterOpen ? 'h-[35vh]' : 'flex-1'}`}>
+        {/* 현재 쿼터 포메이션 표시 */}
+        <div className="absolute left-2 top-1 text-white/70 text-[10px] font-black z-10">{currentFormation}</div>
+
         {currentSlots.map(slot => {
           const p = players.find(p => p.id === slot.playerId);
           return (
-            <div key={slot.id} onClick={() => setActiveSlot(slot.id)} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ top: slot.top, left: slot.left }}>
+            <div key={slot.id} onClick={() => setActiveSlot(slot.id)}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ top: slot.top, left: slot.left }}>
               <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center shadow-lg active:scale-95 transition-all ${p ? 'bg-white border-emerald-600' : 'bg-emerald-700/40 border-white/20 border-dashed'}`}>
                 <span className={`font-black text-[12px] text-center px-1 leading-tight ${p ? 'text-emerald-700' : 'text-white/40'}`}>
                   {p ? p.name : slot.label}
@@ -185,9 +215,13 @@ const App = () => {
             </div>
           );
         })}
+
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20">
-          {[0, 1, 2, 3].map(q => (
-            <button key={q} onClick={() => setSelectedQuarter(q)} className={`w-10 h-10 rounded-full font-black text-[14px] shadow-lg border-2 ${selectedQuarter === q ? 'bg-white border-emerald-600 text-emerald-600' : 'bg-emerald-700/60 border-white/30 text-white'}`}>{q + 1}</button>
+          {[0,1,2,3].map(q => (
+            <button key={q} onClick={() => setSelectedQuarter(q)}
+              className={`w-10 h-10 rounded-full font-black text-[14px] shadow-lg border-2 ${selectedQuarter === q ? 'bg-white border-emerald-600 text-emerald-600' : 'bg-emerald-700/60 border-white/30 text-white'}`}>
+              {q + 1}
+            </button>
           ))}
         </div>
       </div>
@@ -241,10 +275,14 @@ const App = () => {
       {showManager && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end">
           <div className="bg-white w-full max-h-[80vh] rounded-t-[2rem] p-6">
-            <div className="flex justify-between items-center mb-4"><h2 className="font-black">명단 관리</h2><button onClick={() => setShowManager(false)} className="p-2 bg-slate-100 rounded-full"><X size={20}/></button></div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-black">명단 관리</h2>
+              <button onClick={() => setShowManager(false)} className="p-2 bg-slate-100 rounded-full"><X size={20}/></button>
+            </div>
             <div className="grid grid-cols-3 gap-2 overflow-y-auto pb-10">
               {players.map(p => (
-                <button key={p.id} onClick={() => setPlayers(players.map(pl => pl.id === p.id ? {...pl, isPresent: !pl.isPresent} : pl))}
+                <button key={p.id}
+                  onClick={() => setPlayers(players.map(pl => pl.id === p.id ? { ...pl, isPresent: !pl.isPresent } : pl))}
                   className={`p-3 rounded-xl border-2 transition-all ${p.isPresent ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold' : 'border-slate-100 text-slate-300'}`}>
                   {p.name}
                 </button>
@@ -262,9 +300,10 @@ const App = () => {
           </div>
           <div className="grid grid-cols-4 gap-2 overflow-y-auto">
             {attendingPlayers
-              .filter(p => !currentSlots.some(slot => slot.playerId === p.id))
+              .filter(p => !currentSlots.some(s => s.playerId === p.id))
               .map(p => (
-                <button key={p.id} onClick={() => assignPlayer(p.id)} className="p-3 bg-slate-100 rounded-lg text-xs font-bold active:bg-emerald-100">
+                <button key={p.id} onClick={() => assignPlayer(p.id)}
+                  className="p-3 bg-slate-100 rounded-lg text-xs font-bold active:bg-emerald-100">
                   {p.name}
                 </button>
               ))}
