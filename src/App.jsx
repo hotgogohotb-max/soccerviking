@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ChevronUp, ChevronDown, Users, RotateCcw, Send } from 'lucide-react';
 
 const GAS_WEB_APP_URL2 = "https://script.google.com/macros/s/AKfycbw7uV7bDAN9Dc_ATzz3I-aDFgNYkr2sNdryrrcnoLogDHkbWx8zHn3itE0rWSxwNdKx/exec";
-const GAS_WEB_APP_URL  = "https://script.google.com/macros/s/AKfycbx4fubbyIMyjRsPQEBkXUi66eybeTVuWtY3LarL6VML_FbWIX8g6n8EEIqnKCXUGuZT/exec";
+const GAS_WEB_APP_URL  = "https://script.google.com/macros/s/AKfycbziNBeZ1ummxzKc3d86om4YqcNwAx5RKcMPYbyF4VT2YVDmwGxm06Tw4HnZTskr5pfY/exec";
 
 const formationData = {
   '4-4-2': [
@@ -23,7 +23,9 @@ const formationData = {
 };
 
 const FORMATIONS = ['4-4-2', '4-3-3'];
-const rawNames = ["김광태","김돈하","김동현","김민성","김상오","김태진","김필우","김한주","박성수","박승빈","박정근","박종엽","박종호","송상규","심영민","심현승","안광빈","유재민","유재영","이대행","이동민","이승주","이정수","이정혁","이현우","이형진","정인탁","최건혁","최진석","허성찬","홍석운","최원석","홍석재"];
+const rawNames = ["김광태","김돈하","김동현","김민성","김상오","김태진","김필우","김한주","박성수","박승빈","박정근","박종엽","박종호","송상규",
+  "심영민","심현승","안광빈","유재민","유재영","이대행","이동민","이승주","이정수","이정혁","이현우","이형진","정인탁","최건혁","최진석","허성찬",
+  "홍석운","최원석","홍석재", "용병1", "용병2", "용병3", "용병4", "용병5"];
 
 const emptyPlayers     = () => rawNames.map((name, i) => ({ id: i + 1, name, isPresent: false, goals: 0, assists: 0 }));
 // 슬롯에 playerId(풀타임), playerId2(0.5쿼터) 두 자리
@@ -213,17 +215,24 @@ const App = () => {
       </header>
 
       {/* ── 스코어 바 (우리팀=골 합계 자동, 상대팀=수동) ── */}
-      <div className="flex items-center justify-center gap-4 px-4 py-1.5 bg-slate-700 text-white">
-        <span className="text-[11px] font-black text-emerald-400">우리팀</span>
-        <span className="text-2xl font-black w-7 text-center">{score.home}</span>
-        <span className="text-slate-400 font-black text-xl">:</span>
-        <div className="flex items-center gap-1.5">
-          <button onClick={() => setScore(s => ({ ...s, away: Math.max(0, s.away - 1) }))} className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-black flex items-center justify-center">-</button>
-          <span className="text-2xl font-black w-7 text-center">{score.away}</span>
-          <button onClick={() => setScore(s => ({ ...s, away: s.away + 1 }))} className="w-6 h-6 rounded-full bg-rose-600 text-white text-xs font-black flex items-center justify-center">+</button>
-        </div>
-        <span className="text-[11px] font-black text-rose-400">상대팀</span>
-      </div>
+      {(() => {
+        const resultText  = score.home > score.away ? '승' : score.home === score.away ? '무' : '패';
+        const resultColor = score.home > score.away ? 'bg-blue-500' : score.home === score.away ? 'bg-slate-500' : 'bg-rose-600';
+        return (
+          <div className="flex items-center justify-center gap-3 px-4 py-1.5 bg-slate-700 text-white">
+            <span className="text-[11px] font-black text-emerald-400">우리팀</span>
+            <span className="text-2xl font-black w-7 text-center">{score.home}</span>
+            <span className="text-slate-400 font-black text-xl">:</span>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => setScore(s => ({ ...s, away: Math.max(0, s.away - 1) }))} className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-black flex items-center justify-center">-</button>
+              <span className="text-2xl font-black w-7 text-center">{score.away}</span>
+              <button onClick={() => setScore(s => ({ ...s, away: s.away + 1 }))} className="w-6 h-6 rounded-full bg-rose-600 text-white text-xs font-black flex items-center justify-center">+</button>
+            </div>
+            <span className="text-[11px] font-black text-rose-400">상대팀</span>
+            <span className={`${resultColor} text-white font-black text-sm px-3 py-0.5 rounded-full`}>{resultText}</span>
+          </div>
+        );
+      })()}
 
       {isLoading && (
         <div className="absolute inset-0 bg-black/20 z-50 flex items-center justify-center">
