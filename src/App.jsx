@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ChevronUp, ChevronDown, Users, RotateCcw, Send } from 'lucide-react';
 
 const GAS_WEB_APP_URL2 = "https://script.google.com/macros/s/AKfycbw7uV7bDAN9Dc_ATzz3I-aDFgNYkr2sNdryrrcnoLogDHkbWx8zHn3itE0rWSxwNdKx/exec";
-const GAS_WEB_APP_URL  = "https://script.google.com/macros/s/AKfycbwD819dDBqMPxyK81e0cB6SM3seMTDGO1dxfgT0BazzvBVaAkCpj_-UOPuMjSh6axjT/exec";
+const GAS_WEB_APP_URL  = "https://script.google.com/macros/s/AKfycbx4fubbyIMyjRsPQEBkXUi66eybeTVuWtY3LarL6VML_FbWIX8g6n8EEIqnKCXUGuZT/exec";
 
 const formationData = {
   '4-4-2': [
@@ -31,8 +31,8 @@ const emptyQuarterSlots = (formation) => formationData[formation].map(s => ({ ..
 
 const App = () => {
   const [players, setPlayers]                     = useState(emptyPlayers);
-  const [quarterFormations, setQuarterFormations] = useState(['4-4-2','4-4-2','4-4-2','4-4-2']);
-  const [quarterSlots, setQuarterSlots]           = useState(() => [0,1,2,3].map(() => emptyQuarterSlots('4-4-2')));
+  const [quarterFormations, setQuarterFormations] = useState(['4-3-3','4-3-3','4-3-3','4-3-3']);
+  const [quarterSlots, setQuarterSlots]           = useState(() => [0,1,2,3].map(() => emptyQuarterSlots('4-3-3')));
   const [selectedQuarter, setSelectedQuarter]     = useState(0);
   const [isRosterOpen, setIsRosterOpen]           = useState(true);
   const [showManager, setShowManager]             = useState(false);
@@ -43,6 +43,12 @@ const App = () => {
   const [score, setScore]                         = useState({ home: 0, away: 0 });
 
   useEffect(() => { loadDataFromSheet(selectedDate); }, [selectedDate]);
+
+  // 골 합계 → 우리팀 스코어 자동 반영
+  useEffect(() => {
+    const totalGoals = players.filter(p => p.isPresent).reduce((sum, p) => sum + p.goals, 0);
+    setScore(s => ({ ...s, home: totalGoals }));
+  }, [players]);
 
   const currentFormation = quarterFormations[selectedQuarter];
   const currentSlots     = quarterSlots[selectedQuarter];
@@ -59,11 +65,11 @@ const App = () => {
     setQuarterSlots(newSlots);
   };
 
-  // ── 쿼터별 출전 여부 (0 = 미출전, 0.5 = 반쿼터, 1 = 풀쿼터) ──
+  // ── 쿼터별 출전 여부 (0 = 미출전, 0.5 = 반쿼터, 1 = 풀쿼터) — GK 슬롯 제외 ──
   const getPlayerQuarters = (playerId) =>
     quarterSlots.map(slots => {
-      if (slots.some(s => s.playerId  === playerId)) return 1;
-      if (slots.some(s => s.playerId2 === playerId)) return 0.5;
+      if (slots.some(s => s.id !== 'GK' && s.playerId  === playerId)) return 1;
+      if (slots.some(s => s.id !== 'GK' && s.playerId2 === playerId)) return 0.5;
       return 0;
     });
 
@@ -77,8 +83,8 @@ const App = () => {
 
       if (data.result === 'empty' || !data.players?.length) {
         setPlayers(emptyPlayers());
-        setQuarterFormations(['4-4-2','4-4-2','4-4-2','4-4-2']);
-        setQuarterSlots([0,1,2,3].map(() => emptyQuarterSlots('4-4-2')));
+        setQuarterFormations(['4-3-3','4-3-3','4-3-3','4-3-3']);
+        setQuarterSlots([0,1,2,3].map(() => emptyQuarterSlots('4-3-3')));
         setScore({ home: 0, away: 0 });
         return;
       }
@@ -103,8 +109,8 @@ const App = () => {
           }));
         }));
       } else {
-        setQuarterFormations(['4-4-2','4-4-2','4-4-2','4-4-2']);
-        setQuarterSlots([0,1,2,3].map(() => emptyQuarterSlots('4-4-2')));
+        setQuarterFormations(['4-3-3','4-3-3','4-3-3','4-3-3']);
+        setQuarterSlots([0,1,2,3].map(() => emptyQuarterSlots('4-3-3')));
       }
     } catch (e) {
       console.error('로드 실패:', e);
@@ -206,14 +212,10 @@ const App = () => {
         </div>
       </header>
 
-      {/* ── 스코어 바 ── */}
+      {/* ── 스코어 바 (우리팀=골 합계 자동, 상대팀=수동) ── */}
       <div className="flex items-center justify-center gap-4 px-4 py-1.5 bg-slate-700 text-white">
         <span className="text-[11px] font-black text-emerald-400">우리팀</span>
-        <div className="flex items-center gap-1.5">
-          <button onClick={() => setScore(s => ({ ...s, home: Math.max(0, s.home - 1) }))} className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-black flex items-center justify-center">-</button>
-          <span className="text-2xl font-black w-7 text-center">{score.home}</span>
-          <button onClick={() => setScore(s => ({ ...s, home: s.home + 1 }))} className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">+</button>
-        </div>
+        <span className="text-2xl font-black w-7 text-center">{score.home}</span>
         <span className="text-slate-400 font-black text-xl">:</span>
         <div className="flex items-center gap-1.5">
           <button onClick={() => setScore(s => ({ ...s, away: Math.max(0, s.away - 1) }))} className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-black flex items-center justify-center">-</button>
