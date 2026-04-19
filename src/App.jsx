@@ -337,12 +337,12 @@ const App = () => {
       {/* ── 명단 관리 모달 ── */}
       {showManager && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end">
-          <div className="bg-white w-full max-h-[80vh] rounded-t-[2rem] p-6">
-            <div className="flex justify-between items-center mb-4">
+          <div className="bg-white w-full max-h-[80vh] rounded-t-[2rem] p-6 flex flex-col">
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
               <h2 className="font-black">명단 관리</h2>
               <button onClick={() => setShowManager(false)} className="p-2 bg-slate-100 rounded-full"><X size={20}/></button>
             </div>
-            <div className="grid grid-cols-3 gap-2 overflow-y-auto pb-10">
+            <div className="grid grid-cols-3 gap-2 overflow-y-auto pb-4">
               {players.map(p => (
                 <button key={p.id}
                   onClick={() => setPlayers(players.map(pl => pl.id === p.id ? { ...pl, isPresent: !pl.isPresent } : pl))}
