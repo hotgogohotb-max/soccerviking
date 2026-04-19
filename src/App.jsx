@@ -27,7 +27,9 @@ const rawNames = ["김광태","김돈하","김동현","김민성","김상오","�
   "심영민","심현승","안광빈","유재민","유재영","이대행","이동민","이승주","이정수","이정혁","이현우","이형진","정인탁","최건혁","최진석","허성찬",
   "홍석운","최원석","홍석재", "용병1", "용병2", "용병3", "용병4", "용병5"];
 
-const emptyPlayers     = () => rawNames.map((name, i) => ({ id: i + 1, name, isPresent: false, goals: 0, assists: 0 }));
+const isYongbyeong = (name) => name.startsWith('용병');
+
+const emptyPlayers = () => rawNames.map((name, i) => ({ id: i + 1, name, isPresent: false, goals: 0, assists: 0 }));
 // 슬롯에 playerId(풀타임), playerId2(0.5쿼터) 두 자리
 const emptyQuarterSlots = (formation) => formationData[formation].map(s => ({ ...s, playerId: null, playerId2: null }));
 
@@ -127,11 +129,14 @@ const App = () => {
     const attendingPlayers = players.filter(p => p.isPresent);
     if (!attendingPlayers.length) { alert('출석 체크된 선수가 없습니다.'); return; }
 
-    const stats = attendingPlayers.flatMap(p => [
-      { name: p.name, type: 'attendance', value: 1 },
-      ...(p.goals   > 0 ? [{ name: p.name, type: 'goal',   value: p.goals   }] : []),
-      ...(p.assists > 0 ? [{ name: p.name, type: 'assist', value: p.assists }] : []),
-    ]);
+    // 용병은 시트 기록 제외 (포지션·골은 경기 중만 사용)
+    const stats = attendingPlayers
+      .filter(p => !isYongbyeong(p.name))
+      .flatMap(p => [
+        { name: p.name, type: 'attendance', value: 1 },
+        ...(p.goals   > 0 ? [{ name: p.name, type: 'goal',   value: p.goals   }] : []),
+        ...(p.assists > 0 ? [{ name: p.name, type: 'assist', value: p.assists }] : []),
+      ]);
 
     const quarters = quarterSlots.map((slots, idx) => {
       const slotMap = {};
@@ -291,7 +296,9 @@ const App = () => {
               const playerQuarters = getPlayerQuarters(player.id);
               return (
                 <div key={player.id} className="px-1.5 py-1.5 bg-slate-50 rounded-lg border shadow-sm flex flex-col items-center gap-1">
-                  <span className="font-black text-xs text-slate-800">{player.name}</span>
+                  <span className={`font-black text-xs ${isYongbyeong(player.name) ? 'text-orange-500' : 'text-slate-800'}`}>
+                    {player.name}
+                  </span>
                   <div className="flex gap-0.5">
                     {playerQuarters.map((val, idx) => (
                       <div key={idx} className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black
@@ -339,7 +346,15 @@ const App = () => {
               {players.map(p => (
                 <button key={p.id}
                   onClick={() => setPlayers(players.map(pl => pl.id === p.id ? { ...pl, isPresent: !pl.isPresent } : pl))}
-                  className={`p-3 rounded-xl border-2 transition-all ${p.isPresent ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold' : 'border-slate-100 text-slate-300'}`}>
+                  className={`p-3 rounded-xl border-2 transition-all ${
+                    p.isPresent
+                      ? isYongbyeong(p.name)
+                        ? 'border-orange-400 bg-orange-50 text-orange-600 font-bold'
+                        : 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold'
+                      : isYongbyeong(p.name)
+                        ? 'border-orange-200 text-orange-300'
+                        : 'border-slate-100 text-slate-300'
+                  }`}>
                   {p.name}
                 </button>
               ))}
