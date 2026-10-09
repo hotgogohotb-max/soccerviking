@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/* 혹시 모를 배경색 강제 지정 */
+body {
+  background-color: #f1f5f9;
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes loadingBar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
